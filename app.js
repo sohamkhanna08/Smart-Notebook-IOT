@@ -149,5 +149,5 @@ app.delete('/api/sensor-reading/:id', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Smart Notebook IoT running on http://localhost:${PORT}`);
+  console.log(`🚀 Smart Notebook IoT running`);
 });
