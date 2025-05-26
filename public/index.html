@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Notebook IoT 📋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .upload-section h2, .records-section h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .height-display {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .height-display h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .height-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .file-input:hover {
+            border-color: #4facfe;
+            background: #ebf8ff;
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .sensor-controls {
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #718096;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: #4facfe;
+            border-bottom-color: #4facfe;
+        }
+
+        .tab-btn:hover {
+            color: #4facfe;
+            background: rgba(79, 172, 254, 0.1);
+        }
+
+        .tab-content {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .records-table th,
+        .records-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .records-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .records-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .action-btn {
+            padding: 8px 15px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn {
+            background: #48bb78;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #f56565;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .height-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Smart Notebook IoT</h1>
+            <p>Document Management with Real-time Height Sensing</p>
+        </div>
+
+        <div class="dashboard">
+            <div class="card upload-section">
+                <h2>📏 Sensor Control</h2>
+                
+                <div class="height-display">
+                    <h3>Current Height Measurement</h3>
+                    <div class="height-value" id="heightValue">-- cm</div>
+                    <div style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;" id="lastUpdate">Last updated: --</div>
+                </div>
+
+                <div class="sensor-controls">
+                    <button class="upload-btn" id="readSensorBtn" style="margin-bottom: 15px;">
+                        <span id="readSensorText">📡 Read Sensor Now</span>
+                        <span id="readSensorLoader" class="loading" style="display: none;"></span>
+                    </button>
+                    
+                    <button class="upload-btn" id="storeSensorBtn" style="background: linear-gradient(45deg, #48bb78, #38a169); margin-bottom: 20px;">
+                        💾 Store Current Reading
+                    </button>
+                </div>
+
+                <h3 style="color: #4a5568; margin: 20px 0 10px 0;">📤 Upload Document</h3>
+                
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="documentFile" name="document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                        <div class="file-input" onclick="document.getElementById('documentFile').click()">
+                            📁 Choose Document to Upload
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="upload-btn" id="uploadBtn">
+                        <span id="uploadText">📤 Upload with Height Data</span>
+                        <span id="uploadLoader" class="loading" style="display: none;"></span>
+                    </button>
+                </form>
+
+                <div id="statusMessage"></div>
+            </div>
+
+            <div class="card records-section">
+                <h2>📋 Document Records</h2>
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="notebook.switchTab('documents')">📄 Documents</button>
+                    <button class="tab-btn" onclick="notebook.switchTab('sensors')">📏 Sensor Readings</button>
+                </div>
+                
+                <div id="documentsTab" class="tab-content">
+                    <table class="records-table" id="recordsTable">
+                        <thead>
+                            <tr>
+                                <th>📄 Document</th>
+                                <th>📏 Height (cm)</th>
+                                <th>🕐 Upload Time</th>
+                                <th>⚡ Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="sensorsTab" class="tab-content" style="display: none;">
+                    <table class="records-table" id="sensorTable">
+                        <thead>
+                            <tr>
+                                <th>📏 Height (cm)</th>
+                                <th>📝 Note</th>
+                                <th>🕐 Timestamp</th>
+                                <th>⚡ Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sensorBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SmartNotebook {
+            constructor() {
+                this.currentTab = 'documents';
+                this.init();
+                this.loadRecords();
+                this.loadSensorReadings();
+                this.startHeightMonitoring();
+            }
+
+            init() {
+                const uploadForm = document.getElementById('uploadForm');
+                const fileInput = document.getElementById('documentFile');
+                const readSensorBtn = document.getElementById('readSensorBtn');
+                const storeSensorBtn = document.getElementById('storeSensorBtn');
+                
+                uploadForm.addEventListener('submit', (e) => this.handleUpload(e));
+                fileInput.addEventListener('change', (e) => this.updateFileName(e));
+                readSensorBtn.addEventListener('click', () => this.readSensorNow());
+                storeSensorBtn.addEventListener('click', () => this.storeSensorReading());
+            }
+
+            async startHeightMonitoring() {
+                // Update height display every 2 seconds
+                setInterval(() => this.updateHeightDisplay(), 2000);
+                this.updateHeightDisplay(); // Initial load
+            }
+
+            async updateHeightDisplay() {
+                try {
+                    const response = await fetch('/api/height');
+                    const data = await response.json();
+                    document.getElementById('heightValue').textContent = `${data.height || 0} cm`;
+                    document.getElementById('lastUpdate').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                } catch (error) {
+                    console.error('Error fetching height:', error);
+                }
+            }
+
+            async readSensorNow() {
+                const btn = document.getElementById('readSensorBtn');
+                const text = document.getElementById('readSensorText');
+                const loader = document.getElementById('readSensorLoader');
+                
+                btn.disabled = true;
+                text.style.display = 'none';
+                loader.style.display = 'inline-block';
+                
+                try {
+                    const response = await fetch('/api/read-sensor', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showMessage(`📡 Sensor reading: ${result.height} cm`, 'success');
+                        this.updateHeightDisplay();
+                    } else {
+                        this.showMessage('❌ Failed to read sensor', 'error');
+                    }
+                } catch (error) {
+                    this.showMessage(`❌ Error reading sensor: ${error.message}`, 'error');
+                } finally {
+                    btn.disabled = false;
+                    text.style.display = 'inline';
+                    loader.style.display = 'none';
+                }
+            }
+
+            async storeSensorReading() {
+                const note = prompt('Enter a note for this reading (optional):') || 'Manual reading';
+                
+                try {
+                    const response = await fetch('/api/store-reading', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ note })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showMessage(`💾 Reading stored: ${result.reading.height} cm`, 'success');
+                        this.loadSensorReadings();
+                    } else {
+                        this.showMessage('❌ Failed to store reading', 'error');
+                    }
+                } catch (error) {
+                    this.showMessage(`❌ Error storing reading: ${error.message}`, 'error');
+                }
+            }
+
+            switchTab(tab) {
+                this.currentTab = tab;
+                
+                // Update tab buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+                
+                // Show/hide tab content
+                document.getElementById('documentsTab').style.display = tab === 'documents' ? 'block' : 'none';
+                document.getElementById('sensorsTab').style.display = tab === 'sensors' ? 'block' : 'none';
+                
+                // Load appropriate data
+                if (tab === 'sensors') {
+                    this.loadSensorReadings();
+                }
+            }
+
+            async loadSensorReadings() {
+                try {
+                    const response = await fetch('/api/sensor-history');
+                    const readings = await response.json();
+                    this.displaySensorReadings(readings);
+                } catch (error) {
+                    console.error('Error loading sensor readings:', error);
+                }
+            }
+
+            displaySensorReadings(readings) {
+                const tbody = document.getElementById('sensorBody');
+                tbody.innerHTML = '';
+                
+                if (readings.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #718096;">No sensor readings found</td></tr>';
+                    return;
+                }
+
+                readings.forEach(reading => {
+                    const row = document.createElement('tr');
+                    const timestamp = new Date(reading.timestamp).toLocaleString();
+                    
+                    row.innerHTML = `
+                        <td><strong>${reading.height} cm</strong></td>
+                        <td>📝 ${reading.note}</td>
+                        <td>${timestamp}</td>
+                        <td>
+                            <button class="action-btn delete-btn" onclick="notebook.deleteSensorReading('${reading.id}')">🗑️ Delete</button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+
+            async deleteSensorReading(id) {
+                if (!confirm('Are you sure you want to delete this sensor reading?')) return;
+                
+                try {
+                    // Since we're storing in memory, we'll call a delete endpoint
+                    const response = await fetch(`/api/sensor-reading/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        this.showMessage('✅ Sensor reading deleted', 'success');
+                        this.loadSensorReadings();
+                    } else {
+                        this.showMessage('❌ Failed to delete reading', 'error');
+                    }
+                } catch (error) {
+                    this.showMessage(`❌ Error: ${error.message}`, 'error');
+                }
+            }
+
+            updateFileName(e) {
+                const fileName = e.target.files[0]?.name || 'Choose Document to Upload';
+                document.querySelector('.file-input').innerHTML = `📁 ${fileName}`;
+            }
+
+            async handleUpload(e) {
+                e.preventDefault();
+                
+                const formData = new FormData();
+                const fileInput = document.getElementById('documentFile');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    this.showMessage('Please select a file to upload', 'error');
+                    return;
+                }
+
+                formData.append('document', file);
+                
+                this.setLoading(true);
+                
+                try {
+                    const response = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showMessage(`✅ ${result.message}`, 'success');
+                        this.loadRecords();
+                        document.getElementById('uploadForm').reset();
+                        document.querySelector('.file-input').innerHTML = '📁 Choose Document to Upload';
+                    } else {
+                        this.showMessage(`❌ Upload failed: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    this.showMessage(`❌ Network error: ${error.message}`, 'error');
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+
+            async loadRecords() {
+                try {
+                    const response = await fetch('/api/records');
+                    const records = await response.json();
+                    this.displayRecords(records);
+                } catch (error) {
+                    console.error('Error loading records:', error);
+                }
+            }
+
+            displayRecords(records) {
+                const tbody = document.getElementById('recordsBody');
+                tbody.innerHTML = '';
+                
+                if (records.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #718096;">No records found</td></tr>';
+                    return;
+                }
+
+                records.forEach(record => {
+                    const row = document.createElement('tr');
+                    const uploadTime = new Date(record.uploadTime).toLocaleString();
+                    
+                    row.innerHTML = `
+                        <td>📄 ${record.filename}</td>
+                        <td><strong>${record.height} cm</strong></td>
+                        <td>${uploadTime}</td>
+                        <td>
+                            <button class="action-btn download-btn" onclick="notebook.downloadFile('${record.filepath}', '${record.filename}')">⬇️ Download</button>
+                            <button class="action-btn delete-btn" onclick="notebook.deleteRecord('${record._id}')">🗑️ Delete</button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+
+            downloadFile(filepath, filename) {
+                const link = document.createElement('a');
+                link.href = filepath;
+                link.download = filename;
+                link.click();
+            }
+
+            async deleteRecord(id) {
+                if (!confirm('Are you sure you want to delete this record?')) return;
+                
+                try {
+                    const response = await fetch(`/api/records/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        this.showMessage('✅ Record deleted successfully', 'success');
+                        this.loadRecords();
+                    } else {
+                        this.showMessage('❌ Failed to delete record', 'error');
+                    }
+                } catch (error) {
+                    this.showMessage(`❌ Error: ${error.message}`, 'error');
+                }
+            }
+
+            setLoading(isLoading) {
+                const btn = document.getElementById('uploadBtn');
+                const text = document.getElementById('uploadText');
+                const loader = document.getElementById('uploadLoader');
+                
+                btn.disabled = isLoading;
+                text.style.display = isLoading ? 'none' : 'inline';
+                loader.style.display = isLoading ? 'inline-block' : 'none';
+            }
+
+            showMessage(message, type) {
+                const statusDiv = document.getElementById('statusMessage');
+                statusDiv.innerHTML = `<div class="status-message ${type}">${message}</div>`;
+                
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // Initialize the application
+        const notebook = new SmartNotebook();
+    </script>
+</body>
+</html>
